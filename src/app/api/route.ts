@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const APPWRITE_ENDPOINT = "https://cloud.appwrite.io/v1";
-const APPWRITE_PROJECT_ID = "69f0d73900204f7b5dfc";
+const APPWRITE_ENDPOINT = "https://nyc.cloud.appwrite.io/v1";
+const APPWRITE_PROJECT_ID = "69f0f89f003186d816ca";
 const APPWRITE_API_KEY = "14abf3937425ade8e78c9aa0a3e4f454b77d3bd4050ec3232b1f71f390730ec0e196220880e47c6503ec6c6892028cae047c44db1a8b6b1eba36af2d09c5307634a2ce3a33fc424673656b1379cd0abb7a485a7f1efde97da3e97235527a7e9a8e0b96ac84d1779dd341deae9fcb99cd6d3969ca2c0b2f229bd0bd9df61c2dc8";
 
 const headers = {

@@ -23,9 +23,17 @@ import {
   Star,
   ArrowLeft,
   Sparkles,
+  FileOutput,
+  Search,
+  Camera,
+  Smile,
+  Paintbrush,
+  Edit3,
+  Shield,
+  Lock,
 } from 'lucide-react';
 
-const tools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string }[] = [
+const tools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string; premium?: boolean }[] = [
   {
     id: 'qr-generator',
     name: 'مولّد رموز QR',
@@ -98,15 +106,62 @@ const tools: { id: PageId; name: string; desc: string; icon: React.ReactNode; co
   },
 ];
 
+const premiumTools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string; premium?: boolean }[] = [
+  {
+    id: 'pdf-tools',
+    name: 'أدوات PDF',
+    desc: 'ادمج، قسم، اضغط، وحوّل ملفات PDF',
+    icon: <FileOutput className="h-6 w-6" />,
+    color: 'from-red-500 to-red-600',
+    premium: true,
+  },
+  {
+    id: 'seo-analyzer',
+    name: 'محلل SEO',
+    desc: 'حلّل موقعك واحصل على تقييم SEO',
+    icon: <Search className="h-6 w-6" />,
+    color: 'from-amber-500 to-amber-600',
+    premium: true,
+  },
+  {
+    id: 'screenshot-tool',
+    name: 'أداة لقطات الشاشة',
+    desc: 'التقط لقطات شاشة لأي موقع',
+    icon: <Camera className="h-6 w-6" />,
+    color: 'from-violet-500 to-violet-600',
+  },
+  {
+    id: 'emoji-picker',
+    name: 'منتقي الرموز التعبيرية',
+    desc: 'ابحث وانسخ رموز الإيموجي',
+    icon: <Smile className="h-6 w-6" />,
+    color: 'from-orange-500 to-orange-600',
+  },
+  {
+    id: 'css-generator',
+    name: 'مولّد CSS',
+    desc: 'أنشئ ظلال، تدرجات، حواف دائرية وحركات',
+    icon: <Paintbrush className="h-6 w-6" />,
+    color: 'from-pink-500 to-pink-600',
+  },
+  {
+    id: 'markdown-editor',
+    name: 'محرر Markdown',
+    desc: 'اكتب Markdown مع معاينة مباشرة',
+    icon: <Edit3 className="h-6 w-6" />,
+    color: 'from-purple-500 to-purple-600',
+  },
+];
+
 const stats = [
-  { icon: <Wrench className="h-5 w-5" />, value: '10+', label: 'أداة مجانية' },
+  { icon: <Wrench className="h-5 w-5" />, value: '16+', label: 'أداة مجانية' },
   { icon: <Users className="h-5 w-5" />, value: '50K+', label: 'مستخدم نشط' },
   { icon: <Zap className="h-5 w-5" />, value: '1M+', label: 'عملية تنفيذ' },
   { icon: <Star className="h-5 w-5" />, value: '4.9', label: 'تقييم المستخدمين' },
 ];
 
 export function HomePage() {
-  const { setCurrentPage } = useAppStore();
+  const { setCurrentPage, user } = useAppStore();
 
   return (
     <div className="animate-fade-in">
@@ -174,7 +229,7 @@ export function HomePage() {
       {/* Tools Grid */}
       <section id="tools-grid" className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">الأدوات</h2>
+          <h2 className="text-2xl font-bold">الأدوات المجانية</h2>
           <Badge variant="secondary">{tools.length} أداة</Badge>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -202,6 +257,46 @@ export function HomePage() {
 
       {/* Ad Banner */}
       <AdBanner slot="home-middle" format="horizontal" className="mb-8" />
+
+      {/* Premium Tools */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">أدوات متقدمة</h2>
+            <Crown className="h-5 w-5 text-emerald-600" />
+          </div>
+          <Badge variant="secondary">{premiumTools.length} أداة</Badge>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {premiumTools.map((tool) => (
+            <Card
+              key={tool.id}
+              className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-emerald-200 dark:border-emerald-800"
+              onClick={() => setCurrentPage(tool.id)}
+            >
+              <CardContent className="p-5 relative">
+                {tool.premium && (
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0">
+                      <Lock className="h-3 w-3 ml-0.5" />
+                      مميز
+                    </Badge>
+                  </div>
+                )}
+                <div
+                  className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} text-white mb-3 group-hover:scale-110 transition-transform`}
+                >
+                  {tool.icon}
+                </div>
+                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                  {tool.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">{tool.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-8 md:p-12 mb-8 text-center">
@@ -242,6 +337,26 @@ export function HomePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Admin Link (only for admin) */}
+      {user?.email === 'yayass3r@gmail.com' && (
+        <Card className="mb-8 border-amber-200 dark:border-amber-800">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-amber-600" />
+              <span className="text-sm font-medium">لوحة الإدارة</span>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCurrentPage('admin')}
+            >
+              الدخول
+              <ArrowLeft className="h-3 w-3 mr-1" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bottom Ad */}
       <AdBanner slot="home-bottom" format="horizontal" />

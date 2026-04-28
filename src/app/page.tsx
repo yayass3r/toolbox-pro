@@ -16,6 +16,13 @@ import { HashGenerator } from '@/components/tools/hash-generator';
 import { LoremIpsum } from '@/components/tools/lorem-ipsum';
 import { ImageConverter } from '@/components/tools/image-converter';
 import { UnitConverter } from '@/components/tools/unit-converter';
+import { PdfTools } from '@/components/tools/pdf-tools';
+import { SeoAnalyzer } from '@/components/tools/seo-analyzer';
+import { ScreenshotTool } from '@/components/tools/screenshot-tool';
+import { EmojiPicker } from '@/components/tools/emoji-picker';
+import { CssGenerator } from '@/components/tools/css-generator';
+import { MarkdownEditor } from '@/components/tools/markdown-editor';
+import { AdminDashboard } from '@/components/admin/admin-dashboard';
 import { PremiumPage } from '@/components/premium-page';
 import { ProfilePage } from '@/components/auth/profile';
 import { account } from '@/lib/appwrite';
@@ -44,6 +51,20 @@ function PageRenderer({ page }: { page: PageId }) {
       return <ImageConverter />;
     case 'unit-converter':
       return <UnitConverter />;
+    case 'pdf-tools':
+      return <PdfTools />;
+    case 'seo-analyzer':
+      return <SeoAnalyzer />;
+    case 'screenshot-tool':
+      return <ScreenshotTool />;
+    case 'emoji-picker':
+      return <EmojiPicker />;
+    case 'css-generator':
+      return <CssGenerator />;
+    case 'markdown-editor':
+      return <MarkdownEditor />;
+    case 'admin':
+      return <AdminDashboard />;
     case 'premium':
       return <PremiumPage />;
     case 'profile':

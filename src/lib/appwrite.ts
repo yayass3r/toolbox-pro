@@ -1,8 +1,8 @@
 import { Client, Account, Databases, OAuthProvider, ID, Query } from 'appwrite';
 
-const APPWRITE_ENDPOINT = 'https://cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = '69f0d73900204f7b5dfc';
-const APPWRITE_DATABASE_ID = 'toolbox_pro_db';
+const APPWRITE_ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID = '69f0f89f003186d816ca';
+const APPWRITE_DATABASE_ID = 'hf_space_chat';
 
 const client = new Client()
   .setEndpoint(APPWRITE_ENDPOINT)

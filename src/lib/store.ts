@@ -12,6 +12,13 @@ export type PageId =
   | 'lorem-ipsum'
   | 'image-converter'
   | 'unit-converter'
+  | 'pdf-tools'
+  | 'seo-analyzer'
+  | 'screenshot-tool'
+  | 'emoji-picker'
+  | 'css-generator'
+  | 'markdown-editor'
+  | 'admin'
   | 'premium'
   | 'profile';
 

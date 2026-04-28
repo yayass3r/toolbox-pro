@@ -6,11 +6,11 @@ import {
   Sun,
   Moon,
   Menu,
-  X,
   User,
   LogOut,
   Crown,
   Wrench,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore, type PageId } from '@/lib/store';
@@ -41,6 +41,12 @@ const toolLinks: { id: PageId; label: string }[] = [
   { id: 'lorem-ipsum', label: 'مولّد النص العشوائي' },
   { id: 'image-converter', label: 'محول الصور' },
   { id: 'unit-converter', label: 'محول الوحدات' },
+  { id: 'pdf-tools', label: 'أدوات PDF' },
+  { id: 'seo-analyzer', label: 'محلل SEO' },
+  { id: 'screenshot-tool', label: 'لقطة شاشة' },
+  { id: 'emoji-picker', label: 'منتقي إيموجي' },
+  { id: 'css-generator', label: 'مولّد CSS' },
+  { id: 'markdown-editor', label: 'محرر Markdown' },
 ];
 
 export function Navbar() {
@@ -62,6 +68,8 @@ export function Navbar() {
   const handleLogout = () => {
     setUser(null);
   };
+
+  const isAdmin = user?.email === 'yayass3r@gmail.com';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -101,6 +109,17 @@ export function Navbar() {
             <Crown className="h-4 w-4 ml-1" />
             الاشتراك المميز
           </Button>
+          {isAdmin && (
+            <Button
+              variant={currentPage === 'admin' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => handleNav('admin')}
+              className="text-amber-600 dark:text-amber-400"
+            >
+              <Shield className="h-4 w-4 ml-1" />
+              الإدارة
+            </Button>
+          )}
         </nav>
 
         {/* Actions */}
@@ -142,6 +161,12 @@ export function Navbar() {
                   <Crown className="h-4 w-4 ml-2" />
                   الاشتراك المميز
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem onClick={() => handleNav('admin')}>
+                    <Shield className="h-4 w-4 ml-2" />
+                    لوحة الإدارة
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 ml-2" />
@@ -170,7 +195,7 @@ export function Navbar() {
               <SheetTitle className="px-4 pt-4 pb-2 text-lg font-bold gradient-text">
                 ToolBox Pro
               </SheetTitle>
-              <div className="flex flex-col gap-1 p-4">
+              <div className="flex flex-col gap-1 p-4 overflow-y-auto max-h-[calc(100vh-60px)]">
                 <Button
                   variant={currentPage === 'home' ? 'secondary' : 'ghost'}
                   className="justify-start"
@@ -186,11 +211,35 @@ export function Navbar() {
                   <Crown className="h-4 w-4 ml-2" />
                   الاشتراك المميز
                 </Button>
+                {isAdmin && (
+                  <Button
+                    variant={currentPage === 'admin' ? 'secondary' : 'ghost'}
+                    className="justify-start text-amber-600 dark:text-amber-400"
+                    onClick={() => handleNav('admin')}
+                  >
+                    <Shield className="h-4 w-4 ml-2" />
+                    لوحة الإدارة
+                  </Button>
+                )}
                 <div className="my-2 border-t" />
                 <p className="px-3 text-xs text-muted-foreground font-semibold mb-1">
-                  الأدوات
+                  الأدوات المجانية
                 </p>
-                {toolLinks.map((tool) => (
+                {toolLinks.slice(0, 10).map((tool) => (
+                  <Button
+                    key={tool.id}
+                    variant={currentPage === tool.id ? 'secondary' : 'ghost'}
+                    className="justify-start"
+                    onClick={() => handleNav(tool.id)}
+                  >
+                    {tool.label}
+                  </Button>
+                ))}
+                <div className="my-2 border-t" />
+                <p className="px-3 text-xs text-muted-foreground font-semibold mb-1">
+                  أدوات متقدمة
+                </p>
+                {toolLinks.slice(10).map((tool) => (
                   <Button
                     key={tool.id}
                     variant={currentPage === tool.id ? 'secondary' : 'ghost'}
