@@ -462,7 +462,7 @@ export function HomePage() {
       </section>
 
       {/* Newsletter */}
-      <Card className="mb-8">
+      <Card className="mb-8" id="newsletter-section">
         <CardContent className="p-6 text-center">
           <h3 className="font-bold mb-2">ابقَ على اطلاع</h3>
           <p className="text-sm text-muted-foreground mb-4">

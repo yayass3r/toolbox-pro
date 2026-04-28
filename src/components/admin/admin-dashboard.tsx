@@ -34,7 +34,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, type AdSlot, type PopupConfig, type AdSettings } from '@/lib/store';
 import { databases, Query, COLLECTIONS, DATABASE_ID } from '@/lib/appwrite';
 import {
   BarChart as ReBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -44,7 +44,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const COLORS = ['#0d9488', '#059669', '#10b981', '#2dd4bf', '#34d399', '#6ee7b7', '#14b8a6', '#0f766e'];
 
-type Section = 'overview' | 'users' | 'tools' | 'revenue' | 'ads' | 'newsletter' | 'reports' | 'settings';
+type Section = 'overview' | 'users' | 'tools' | 'revenue' | 'ads' | 'popups' | 'newsletter' | 'reports' | 'settings';
 
 const sidebarItems: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'نظرة عامة', icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -53,6 +53,7 @@ const sidebarItems: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: 'revenue', label: 'الإيرادات والاشتراكات', icon: <CreditCard className="h-5 w-5" /> },
   { id: 'ads', label: 'الإعلانات', icon: <Megaphone className="h-5 w-5" /> },
   { id: 'newsletter', label: 'النشرة البريدية', icon: <Mail className="h-5 w-5" /> },
+  { id: 'popups', label: 'النوافذ المنبثقة', icon: <Bell className="h-5 w-5" /> },
   { id: 'reports', label: 'التقارير', icon: <FileBarChart className="h-5 w-5" /> },
   { id: 'settings', label: 'الإعدادات', icon: <Cog className="h-5 w-5" /> },
 ];
@@ -308,6 +309,8 @@ export function AdminDashboard() {
         return <RevenueSection />;
       case 'ads':
         return <AdsSection />;
+      case 'popups':
+        return <PopupsSection />;
       case 'newsletter':
         return <NewsletterSection subscribers={subscribers} subject={newsletterSubject} setSubject={setNewsletterSubject} body={newsletterBody} setBody={setNewsletterBody} exportCSV={exportCSV} />;
       case 'reports':
@@ -936,107 +939,653 @@ function RevenueSection() {
 // ========== ADS SECTION ==========
 function AdsSection() {
   const { toast } = useToast();
-  const [slots, setSlots] = useState(adSlots);
+  const { adSettings, setAdSettings } = useAppStore();
+  const [localSettings, setLocalSettings] = useState<AdSettings>(adSettings);
+
+  const totalImpressions = localSettings.adSlots.reduce((sum, s) => sum + s.impressions, 0);
+  const totalClicks = localSettings.adSlots.reduce((sum, s) => sum + s.clicks, 0);
+  const totalRevenue = localSettings.adSlots.reduce((sum, s) => sum + s.revenue, 0);
+  const overallCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0.00';
+
+  const updateSlot = (id: string, updates: Partial<AdSlot>) => {
+    setLocalSettings((prev) => ({
+      ...prev,
+      adSlots: prev.adSlots.map((s) => s.id === id ? { ...s, ...updates } : s),
+    }));
+  };
+
+  const addNewSlot = () => {
+    const newSlot: AdSlot = {
+      id: `slot-${Date.now()}`,
+      name: 'موضع جديد',
+      position: 'custom',
+      active: false,
+      adsenseSlotId: '',
+      customHtml: '',
+      format: 'auto',
+      impressions: 0,
+      clicks: 0,
+      revenue: 0,
+    };
+    setLocalSettings((prev) => ({ ...prev, adSlots: [...prev.adSlots, newSlot] }));
+    toast({ title: 'تمت الإضافة', description: 'تم إشاء موضع إعلاني جديد' });
+  };
+
+  const deleteSlot = (id: string) => {
+    setLocalSettings((prev) => ({ ...prev, adSlots: prev.adSlots.filter((s) => s.id !== id) }));
+    toast({ title: 'تم الحذف', description: 'تم حذف الموضع الإعلاني' });
+  };
+
+  const handleSave = () => {
+    setAdSettings(localSettings);
+    toast({ title: 'تم الحفظ', description: 'تم حفظ إعدادات الإعلانات بنجاح' });
+  };
 
   return (
     <div className="space-y-4">
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <Eye className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">مشاهدات</p>
-            <p className="text-xl font-bold">222K</p>
+            <p className="text-xs text-muted-foreground">المشاهدات</p>
+            <p className="text-xl font-bold">{(totalImpressions / 1000).toFixed(0)}K</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <MousePointerClick className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">نقرات</p>
-            <p className="text-xl font-bold">4.2K</p>
+            <p className="text-xs text-muted-foreground">النقرات</p>
+            <p className="text-xl font-bold">{totalClicks.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <BarChart3 className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">CTR</p>
-            <p className="text-xl font-bold">1.89%</p>
+            <p className="text-xl font-bold">{overallCtr}%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <DollarSign className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">إجمالي الإيراد</p>
-            <p className="text-xl font-bold">$849</p>
+            <p className="text-xl font-bold">${totalRevenue.toFixed(0)}</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* AdSense Configuration */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">إعدادات Google AdSense</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>معرّف عميل AdSense (Client ID)</Label>
+            <Input
+              value={localSettings.adsenseClientId}
+              onChange={(e) => setLocalSettings((prev) => ({ ...prev, adsenseClientId: e.target.value }))}
+              placeholder="ca-pub-XXXXXXXXXX"
+              dir="ltr"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">تفعيل AdSense</p>
+              <p className="text-sm text-muted-foreground">تفعيل أو تعطيل إعلانات AdSense على الموقع</p>
+            </div>
+            <Switch
+              checked={localSettings.adsenseEnabled}
+              onCheckedChange={(checked) => setLocalSettings((prev) => ({ ...prev, adsenseEnabled: checked }))}
+            />
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">الإعلانات التلقائية (Auto Ads)</p>
+              <p className="text-sm text-muted-foreground">السماح لـ AdSense بوضع الإعلانات تلقائياً</p>
+            </div>
+            <Switch
+              checked={localSettings.autoAdsEnabled}
+              onCheckedChange={(checked) => setLocalSettings((prev) => ({ ...prev, autoAdsEnabled: checked }))}
+            />
+          </div>
+          <Badge variant={localSettings.adsenseEnabled ? 'default' : 'outline'} className="text-xs">
+            {localSettings.adsenseEnabled
+              ? localSettings.adsenseClientId ? 'AdSense: مفعّل ✓' : 'AdSense: مفعّل بدون معرّف ⚠️'
+              : 'AdSense: معطّل'}
+          </Badge>
+        </CardContent>
+      </Card>
+
+      {/* Ad Slots Table */}
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">إدارة مواضع الإعلانات</CardTitle>
-            <Badge variant="outline" className="text-xs">AdSense: في انتظار التفعيل</Badge>
+            <CardTitle className="text-base">مواضع الإعلانات</CardTitle>
+            <Button size="sm" onClick={addNewSlot} className="bg-teal-600 hover:bg-teal-700">
+              <Plus className="h-4 w-4 ml-1" /> إضافة موضع
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="max-h-64 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>الموضع</TableHead>
+                  <TableHead>الاسم</TableHead>
+                  <TableHead>معرّف Slot</TableHead>
+                  <TableHead>التنسيق</TableHead>
+                  <TableHead>HTML مخصص</TableHead>
+                  <TableHead>نشط</TableHead>
                   <TableHead>المشاهدات</TableHead>
                   <TableHead>النقرات</TableHead>
                   <TableHead>الإيراد</TableHead>
                   <TableHead>CTR</TableHead>
-                  <TableHead>تفعيل</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {slots.map((slot) => (
-                  <TableRow key={slot.id}>
-                    <TableCell className="text-sm font-medium">{slot.name}</TableCell>
-                    <TableCell className="text-sm">{slot.impressions}</TableCell>
-                    <TableCell className="text-sm">{slot.clicks}</TableCell>
-                    <TableCell className="text-sm font-medium">{slot.revenue}</TableCell>
-                    <TableCell className="text-sm">{slot.ctr}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={slot.active}
-                        onCheckedChange={(checked) => {
-                          setSlots(slots.map((s) => s.id === slot.id ? { ...s, active: checked } : s));
-                          toast({ title: checked ? 'تم التفعيل' : 'تم التعطيل' });
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {localSettings.adSlots.map((slot) => {
+                  const ctr = slot.impressions > 0 ? ((slot.clicks / slot.impressions) * 100).toFixed(2) : '0.00';
+                  return (
+                    <TableRow key={slot.id}>
+                      <TableCell>
+                        <Input
+                          value={slot.name}
+                          onChange={(e) => updateSlot(slot.id, { name: e.target.value })}
+                          className="h-8 text-sm w-32"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={slot.adsenseSlotId}
+                          onChange={(e) => updateSlot(slot.id, { adsenseSlotId: e.target.value })}
+                          placeholder="1234567890"
+                          dir="ltr"
+                          className="h-8 text-sm w-28"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={slot.format}
+                          onValueChange={(v) => updateSlot(slot.id, { format: v as AdSlot['format'] })}
+                        >
+                          <SelectTrigger className="h-8 w-24 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="horizontal">أفقي</SelectItem>
+                            <SelectItem value="vertical">عمودي</SelectItem>
+                            <SelectItem value="square">مربع</SelectItem>
+                            <SelectItem value="auto">تلقائي</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-8 text-xs">
+                              <Edit3 className="h-3 w-3 ml-1" /> تعديل
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent dir="rtl">
+                            <DialogHeader>
+                              <DialogTitle>كود HTML مخصص - {slot.name}</DialogTitle>
+                            </DialogHeader>
+                            <Textarea
+                              value={slot.customHtml}
+                              onChange={(e) => updateSlot(slot.id, { customHtml: e.target.value })}
+                              placeholder="أدخل كود HTML المخصص للإعلان..."
+                              rows={8}
+                              dir="ltr"
+                              className="font-mono text-sm"
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={slot.active}
+                          onCheckedChange={(checked) => updateSlot(slot.id, { active: checked })}
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm">{(slot.impressions / 1000).toFixed(0)}K</TableCell>
+                      <TableCell className="text-sm">{slot.clicks.toLocaleString()}</TableCell>
+                      <TableCell className="text-sm font-medium">${slot.revenue.toFixed(0)}</TableCell>
+                      <TableCell className="text-sm">{ctr}%</TableCell>
+                      <TableCell>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2 text-red-600">
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent dir="rtl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>حذف الموضع الإعلاني</AlertDialogTitle>
+                              <AlertDialogDescription>هل أنت متأكد من حذف &quot;{slot.name}&quot;؟</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteSlot(slot.id)}>حذف</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
 
+      {/* Preview Section */}
       <Card>
         <CardContent className="p-4">
           <h3 className="font-bold text-sm mb-3">معاينة مواضع الإعلانات</h3>
           <div className="border rounded-lg p-4 space-y-3">
             <div className="h-8 bg-muted/30 rounded flex items-center justify-center text-xs text-muted-foreground">شريط التنقل</div>
-            <div className={`h-12 border border-dashed rounded flex items-center justify-center text-xs ${slots[0]?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
-              📢 إعلان أعلى الصفحة {slots[0]?.active ? '(نشط)' : '(معطل)'}
-            </div>
+            {localSettings.adSlots.filter((s) => s.position.includes('top')).length > 0 && (
+              <div className={`h-12 border border-dashed rounded flex items-center justify-center text-xs ${localSettings.adSlots.find((s) => s.position.includes('top'))?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
+                📢 إعلان أعلى الصفحة {localSettings.adSlots.find((s) => s.position.includes('top'))?.active ? '(نشط)' : '(معطل)'}
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-2">
               <div className="h-20 bg-muted/30 rounded flex items-center justify-center text-xs text-muted-foreground">محتوى</div>
               <div className="h-20 bg-muted/30 rounded flex items-center justify-center text-xs text-muted-foreground">محتوى</div>
-              <div className={`h-20 border border-dashed rounded flex items-center justify-center text-xs ${slots[4]?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
-                📢 جانبي {slots[4]?.active ? '(نشط)' : '(معطل)'}
+              <div className={`h-20 border border-dashed rounded flex items-center justify-center text-xs ${localSettings.adSlots.find((s) => s.position.includes('sidebar'))?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
+                📢 جانبي {localSettings.adSlots.find((s) => s.position.includes('sidebar'))?.active ? '(نشط)' : '(معطل)'}
               </div>
             </div>
-            <div className={`h-12 border border-dashed rounded flex items-center justify-center text-xs ${slots[1]?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
-              📢 إعلان وسط الصفحة {slots[1]?.active ? '(نشط)' : '(معطل)'}
-            </div>
+            {localSettings.adSlots.filter((s) => s.position.includes('middle')).length > 0 && (
+              <div className={`h-12 border border-dashed rounded flex items-center justify-center text-xs ${localSettings.adSlots.find((s) => s.position.includes('middle'))?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
+                📢 إعلان وسط الصفحة {localSettings.adSlots.find((s) => s.position.includes('middle'))?.active ? '(نشط)' : '(معطل)'}
+              </div>
+            )}
+            {localSettings.adSlots.filter((s) => s.position.includes('bottom')).length > 0 && (
+              <div className={`h-12 border border-dashed rounded flex items-center justify-center text-xs ${localSettings.adSlots.find((s) => s.position.includes('bottom'))?.active ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600' : 'bg-muted/30 text-muted-foreground'}`}>
+                📢 إعلان أسفل الصفحة {localSettings.adSlots.find((s) => s.position.includes('bottom'))?.active ? '(نشط)' : '(معطل)'}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Save Button */}
+      <Button className="w-full bg-teal-600 hover:bg-teal-700" onClick={handleSave}>
+        حفظ إعدادات الإعلانات
+      </Button>
+    </div>
+  );
+}
+
+// ========== POPUPS SECTION ==========
+function PopupsSection() {
+  const { toast } = useToast();
+  const { popups, setPopups } = useAppStore();
+  const [editingPopup, setEditingPopup] = useState<PopupConfig | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [previewPopup, setPreviewPopup] = useState<PopupConfig | null>(null);
+
+  const typeLabels: Record<PopupConfig['type'], string> = {
+    promotion: 'ترويجي',
+    announcement: 'إعلان',
+    tool_recommendation: 'توصية أداة',
+    newsletter: 'نشرة بريدية',
+    discount: 'خصم',
+  };
+
+  const triggerLabels: Record<PopupConfig['trigger'], string> = {
+    page_load: 'عند تحميل الصفحة',
+    time_delay: 'بعد تأخير زمني',
+    exit_intent: 'عند مغادرة الصفحة',
+    scroll: 'عند التمرير',
+  };
+
+  const audienceLabels: Record<PopupConfig['targetAudience'], string> = {
+    all: 'الجميع',
+    free: 'مستخدمين مجانيين',
+    premium: 'مستخدمين مميزين',
+    new: 'مستخدمين جدد',
+  };
+
+  const frequencyLabels: Record<PopupConfig['frequency'], string> = {
+    once_per_session: 'مرة بالجلسة',
+    once_per_day: 'مرة باليوم',
+    every_visit: 'كل زيارة',
+    once_per_week: 'مرة بالأسبوع',
+  };
+
+  const openNewPopupDialog = () => {
+    const newPopup: PopupConfig = {
+      id: `popup-${Date.now()}`,
+      title: '',
+      message: '',
+      type: 'promotion',
+      icon: '📢',
+      imageUrl: '',
+      buttonText: 'معرفة المزيد',
+      buttonUrl: '',
+      trigger: 'page_load',
+      triggerDelay: 5,
+      targetAudience: 'all',
+      frequency: 'once_per_session',
+      active: false,
+      startDate: '',
+      endDate: '',
+      createdAt: new Date().toISOString(),
+      impressions: 0,
+      clicks: 0,
+    };
+    setEditingPopup(newPopup);
+    setIsDialogOpen(true);
+  };
+
+  const openEditDialog = (popup: PopupConfig) => {
+    setEditingPopup({ ...popup });
+    setIsDialogOpen(true);
+  };
+
+  const handleSavePopup = () => {
+    if (!editingPopup) return;
+    const exists = popups.find((p) => p.id === editingPopup.id);
+    if (exists) {
+      setPopups(popups.map((p) => p.id === editingPopup.id ? editingPopup : p));
+      toast({ title: 'تم التحديث', description: `تم تحديث النافذة المنبثقة: ${editingPopup.title}` });
+    } else {
+      setPopups([...popups, editingPopup]);
+      toast({ title: 'تمت الإضافة', description: `تم إضافة نافذة منبثقة جديدة: ${editingPopup.title}` });
+    }
+    setIsDialogOpen(false);
+    setEditingPopup(null);
+  };
+
+  const deletePopup = (id: string) => {
+    setPopups(popups.filter((p) => p.id !== id));
+    toast({ title: 'تم الحذف', description: 'تم حذف النافذة المنبثقة' });
+  };
+
+  const togglePopupActive = (id: string, active: boolean) => {
+    setPopups(popups.map((p) => p.id === id ? { ...p, active } : p));
+    toast({ title: active ? 'تم التفعيل' : 'تم التعطيل' });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{popups.length} نافذة منبثقة · {popups.filter((p) => p.active).length} نشطة</p>
+        </div>
+        <Button onClick={openNewPopupDialog} className="bg-teal-600 hover:bg-teal-700">
+          <Plus className="h-4 w-4 ml-1" /> إضافة نافذة منبثقة
+        </Button>
+      </div>
+
+      {/* Popup Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {popups.map((popup) => (
+          <Card key={popup.id} className={`transition-all ${!popup.active ? 'opacity-60' : ''}`}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{popup.icon}</span>
+                  <div>
+                    <h3 className="font-medium text-sm">{popup.title || 'بدون عنوان'}</h3>
+                    <Badge variant="outline" className="text-[10px] mt-0.5">
+                      {typeLabels[popup.type]}
+                    </Badge>
+                  </div>
+                </div>
+                <Switch
+                  checked={popup.active}
+                  onCheckedChange={(checked) => togglePopupActive(popup.id, checked)}
+                />
+              </div>
+
+              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{popup.message}</p>
+
+              <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div className="bg-muted/50 rounded p-1.5">
+                  <p className="text-muted-foreground">المشغل</p>
+                  <p className="font-medium">{triggerLabels[popup.trigger]}</p>
+                </div>
+                <div className="bg-muted/50 rounded p-1.5">
+                  <p className="text-muted-foreground">الجمهور</p>
+                  <p className="font-medium">{audienceLabels[popup.targetAudience]}</p>
+                </div>
+                <div className="bg-muted/50 rounded p-1.5">
+                  <p className="text-muted-foreground">التكرار</p>
+                  <p className="font-medium">{frequencyLabels[popup.frequency]}</p>
+                </div>
+                {popup.triggerDelay > 0 && (
+                  <div className="bg-muted/50 rounded p-1.5">
+                    <p className="text-muted-foreground">التأخير</p>
+                    <p className="font-medium">{popup.triggerDelay} ثانية</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between border-t pt-2">
+                <div className="flex gap-3 text-xs text-muted-foreground">
+                  <span><Eye className="h-3 w-3 inline ml-1" />{popup.impressions.toLocaleString()}</span>
+                  <span><MousePointerClick className="h-3 w-3 inline ml-1" />{popup.clicks.toLocaleString()}</span>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => setPreviewPopup(popup)}>
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => openEditDialog(popup)}>
+                    <Edit3 className="h-3 w-3" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="h-7 text-xs px-2 text-red-600">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent dir="rtl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>حذف النافذة المنبثقة</AlertDialogTitle>
+                        <AlertDialogDescription>هل أنت متأكد من حذف &quot;{popup.title}&quot;؟</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deletePopup(popup.id)}>حذف</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {popups.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Bell className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
+            <p className="text-muted-foreground">لا توجد نوافذ منبثقة</p>
+            <Button className="mt-3 bg-teal-600 hover:bg-teal-700" onClick={openNewPopupDialog}>
+              <Plus className="h-4 w-4 ml-1" /> إضافة نافذة منبثقة
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit / Add Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>{editingPopup && popups.find((p) => p.id === editingPopup.id) ? 'تعديل النافذة المنبثقة' : 'إضافة نافذة منبثقة جديدة'}</DialogTitle>
+          </DialogHeader>
+          {editingPopup && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>العنوان</Label>
+                  <Input value={editingPopup.title} onChange={(e) => setEditingPopup({ ...editingPopup, title: e.target.value })} placeholder="عنوان النافذة المنبثقة" />
+                </div>
+                <div className="space-y-2">
+                  <Label>الأيقونة (إيموجي)</Label>
+                  <Input value={editingPopup.icon} onChange={(e) => setEditingPopup({ ...editingPopup, icon: e.target.value })} placeholder="📢" className="w-20" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>الرسالة</Label>
+                <Textarea value={editingPopup.message} onChange={(e) => setEditingPopup({ ...editingPopup, message: e.target.value })} placeholder="نص الرسالة..." rows={3} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>النوع</Label>
+                  <Select value={editingPopup.type} onValueChange={(v) => setEditingPopup({ ...editingPopup, type: v as PopupConfig['type'] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="promotion">ترويجي</SelectItem>
+                      <SelectItem value="announcement">إعلان</SelectItem>
+                      <SelectItem value="tool_recommendation">توصية أداة</SelectItem>
+                      <SelectItem value="newsletter">نشرة بريدية</SelectItem>
+                      <SelectItem value="discount">خصم</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>المشغل</Label>
+                  <Select value={editingPopup.trigger} onValueChange={(v) => setEditingPopup({ ...editingPopup, trigger: v as PopupConfig['trigger'] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="page_load">عند تحميل الصفحة</SelectItem>
+                      <SelectItem value="time_delay">بعد تأخير زمني</SelectItem>
+                      <SelectItem value="exit_intent">عند مغادرة الصفحة</SelectItem>
+                      <SelectItem value="scroll">عند التمرير</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {editingPopup.trigger === 'time_delay' && (
+                <div className="space-y-2">
+                  <Label>التأخير (بالثواني)</Label>
+                  <Input type="number" value={editingPopup.triggerDelay} onChange={(e) => setEditingPopup({ ...editingPopup, triggerDelay: Number(e.target.value) })} min={0} dir="ltr" />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>الجمهور المستهدف</Label>
+                  <Select value={editingPopup.targetAudience} onValueChange={(v) => setEditingPopup({ ...editingPopup, targetAudience: v as PopupConfig['targetAudience'] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">الجميع</SelectItem>
+                      <SelectItem value="free">مستخدمين مجانيين</SelectItem>
+                      <SelectItem value="premium">مستخدمين مميزين</SelectItem>
+                      <SelectItem value="new">مستخدمين جدد</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>التكرار</Label>
+                  <Select value={editingPopup.frequency} onValueChange={(v) => setEditingPopup({ ...editingPopup, frequency: v as PopupConfig['frequency'] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="once_per_session">مرة بالجلسة</SelectItem>
+                      <SelectItem value="once_per_day">مرة باليوم</SelectItem>
+                      <SelectItem value="every_visit">كل زيارة</SelectItem>
+                      <SelectItem value="once_per_week">مرة بالأسبوع</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>نص الزر</Label>
+                  <Input value={editingPopup.buttonText} onChange={(e) => setEditingPopup({ ...editingPopup, buttonText: e.target.value })} placeholder="معرفة المزيد" />
+                </div>
+                <div className="space-y-2">
+                  <Label>رابط الزر</Label>
+                  <Input value={editingPopup.buttonUrl} onChange={(e) => setEditingPopup({ ...editingPopup, buttonUrl: e.target.value })} placeholder="https://..." dir="ltr" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>رابط الصورة (اختياري)</Label>
+                <Input value={editingPopup.imageUrl} onChange={(e) => setEditingPopup({ ...editingPopup, imageUrl: e.target.value })} placeholder="https://..." dir="ltr" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>تاريخ البدء</Label>
+                  <Input type="date" value={editingPopup.startDate} onChange={(e) => setEditingPopup({ ...editingPopup, startDate: e.target.value })} dir="ltr" />
+                </div>
+                <div className="space-y-2">
+                  <Label>تاريخ الانتهاء</Label>
+                  <Input type="date" value={editingPopup.endDate} onChange={(e) => setEditingPopup({ ...editingPopup, endDate: e.target.value })} dir="ltr" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">تفعيل النافذة المنبثقة</p>
+                  <p className="text-sm text-muted-foreground">تفعيل أو تعطيل عرض هذه النافذة</p>
+                </div>
+                <Switch
+                  checked={editingPopup.active}
+                  onCheckedChange={(checked) => setEditingPopup({ ...editingPopup, active: checked })}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button className="bg-teal-600 hover:bg-teal-700 flex-1" onClick={handleSavePopup}>
+                  حفظ
+                </Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewPopup} onOpenChange={(open) => { if (!open) setPreviewPopup(null); }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>معاينة النافذة المنبثقة</DialogTitle>
+          </DialogHeader>
+          {previewPopup && (
+            <div className="border rounded-lg p-6 bg-background shadow-inner">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">{previewPopup.icon}</span>
+                <h3 className="font-bold text-lg">{previewPopup.title}</h3>
+              </div>
+              {previewPopup.imageUrl && (
+                <div className="mb-3 rounded overflow-hidden">
+                  <img src={previewPopup.imageUrl} alt={previewPopup.title} className="w-full h-32 object-cover" />
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground mb-4">{previewPopup.message}</p>
+              {previewPopup.buttonText && (
+                <Button className="w-full bg-teal-600 hover:bg-teal-700">
+                  {previewPopup.buttonText}
+                </Button>
+              )}
+              <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
+                <span>النوع: {typeLabels[previewPopup.type]}</span>
+                <span>المشغل: {triggerLabels[previewPopup.trigger]}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1284,6 +1833,7 @@ function SettingsSection({ settings, setSettings }: {
           <div className="space-y-2">
             <Label>Google AdSense Client ID</Label>
             <Input value={s.adsenseClientId as string} onChange={(e) => set('adsenseClientId', e.target.value)} placeholder="ca-pub-XXXXXXXXXX" dir="ltr" />
+            <p className="text-xs text-muted-foreground">يمكنك أيضاً إدارة إعدادات AdSense التفصيلية من قسم الإعلانات</p>
           </div>
           <Separator />
           <div className="space-y-2">

@@ -33,6 +33,7 @@ import { WordCloud } from '@/components/tools/word-cloud';
 import { AdminDashboard } from '@/components/admin/admin-dashboard';
 import { PremiumPage } from '@/components/premium-page';
 import { ProfilePage } from '@/components/auth/profile';
+import { PopupNotification } from '@/components/shared/popup-notification';
 import { account } from '@/lib/appwrite';
 
 function PageRenderer({ page }: { page: PageId }) {
@@ -123,6 +124,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       {currentPage !== 'admin' && <Navbar />}
       <AuthDialog />
+      <PopupNotification />
       <main className={currentPage === 'admin' ? 'flex-1' : 'flex-1 container mx-auto px-4 py-6'}>
         <PageRenderer page={currentPage} />
       </main>
