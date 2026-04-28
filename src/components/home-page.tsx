@@ -31,6 +31,14 @@ import {
   Edit3,
   Shield,
   Lock,
+  Receipt,
+  Link2,
+  Timer,
+  Calendar,
+  Cloud,
+  Film,
+  Briefcase,
+  Scaling,
 } from 'lucide-react';
 
 const tools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string; premium?: boolean }[] = [
@@ -106,6 +114,25 @@ const tools: { id: PageId; name: string; desc: string; icon: React.ReactNode; co
   },
 ];
 
+const professionalTools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string; premium?: boolean }[] = [
+  {
+    id: 'resume-builder',
+    name: 'منشئ السيرة الذاتية',
+    desc: 'أنشئ سيرتك الذاتية الاحترافية مع قوالب متعددة',
+    icon: <Briefcase className="h-6 w-6" />,
+    color: 'from-amber-500 to-orange-600',
+    premium: true,
+  },
+  {
+    id: 'invoice-generator',
+    name: 'منشئ الفواتير',
+    desc: 'أنشئ فواتير احترافية مع حساب الضرائب والخصومات',
+    icon: <Receipt className="h-6 w-6" />,
+    color: 'from-rose-500 to-red-600',
+    premium: true,
+  },
+];
+
 const premiumTools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string; premium?: boolean }[] = [
   {
     id: 'pdf-tools',
@@ -153,8 +180,53 @@ const premiumTools: { id: PageId; name: string; desc: string; icon: React.ReactN
   },
 ];
 
+const newTools: { id: PageId; name: string; desc: string; icon: React.ReactNode; color: string; premium?: boolean }[] = [
+  {
+    id: 'link-shortener',
+    name: 'مقص الروابط',
+    desc: 'قص الروابط وأنشئ رموز QR وتتبع النقرات',
+    icon: <Link2 className="h-6 w-6" />,
+    color: 'from-indigo-500 to-indigo-600',
+  },
+  {
+    id: 'image-resizer',
+    name: 'مغير حجم الصور',
+    desc: 'غيّر حجم الصور مع أحجام مسبقة للتواصل الاجتماعي',
+    icon: <Scaling className="h-6 w-6" />,
+    color: 'from-sky-500 to-sky-600',
+  },
+  {
+    id: 'video-to-gif',
+    name: 'محول فيديو إلى GIF',
+    desc: 'حوّل مقاطع الفيديو القصيرة إلى رسوم متحركة',
+    icon: <Film className="h-6 w-6" />,
+    color: 'from-fuchsia-500 to-fuchsia-600',
+  },
+  {
+    id: 'timer-stopwatch',
+    name: 'عداد ومؤقت',
+    desc: 'عداد تنازلي، ساعة إيقاف، ومؤقت بومودورو',
+    icon: <Timer className="h-6 w-6" />,
+    color: 'from-slate-500 to-slate-600',
+  },
+  {
+    id: 'age-calculator',
+    name: 'حاسبة العمر',
+    desc: 'احسب عمرك بالتفصيل مع عد تنازلي لعيد ميلادك',
+    icon: <Calendar className="h-6 w-6" />,
+    color: 'from-yellow-500 to-yellow-600',
+  },
+  {
+    id: 'word-cloud',
+    name: 'سحابة الكلمات',
+    desc: 'حوّل النصوص إلى سحابة كلمات ملونة ومخصصة',
+    icon: <Cloud className="h-6 w-6" />,
+    color: 'from-teal-400 to-cyan-500',
+  },
+];
+
 const stats = [
-  { icon: <Wrench className="h-5 w-5" />, value: '16+', label: 'أداة مجانية' },
+  { icon: <Wrench className="h-5 w-5" />, value: '24+', label: 'أداة مجانية' },
   { icon: <Users className="h-5 w-5" />, value: '50K+', label: 'مستخدم نشط' },
   { icon: <Zap className="h-5 w-5" />, value: '1M+', label: 'عملية تنفيذ' },
   { icon: <Star className="h-5 w-5" />, value: '4.9', label: 'تقييم المستخدمين' },
@@ -226,6 +298,46 @@ export function HomePage() {
         ))}
       </section>
 
+      {/* Professional Services Section */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">خدمات احترافية</h2>
+            <Briefcase className="h-5 w-5 text-amber-600" />
+          </div>
+          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">مميز</Badge>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {professionalTools.map((tool) => (
+            <Card
+              key={tool.id}
+              className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20"
+              onClick={() => setCurrentPage(tool.id)}
+            >
+              <CardContent className="p-5 relative">
+                {tool.premium && (
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">
+                      <Lock className="h-3 w-3 ml-0.5" />
+                      مميز
+                    </Badge>
+                  </div>
+                )}
+                <div
+                  className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} text-white mb-3 group-hover:scale-110 transition-transform`}
+                >
+                  {tool.icon}
+                </div>
+                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                  {tool.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">{tool.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
       {/* Tools Grid */}
       <section id="tools-grid" className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -237,6 +349,38 @@ export function HomePage() {
             <Card
               key={tool.id}
               className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1"
+              onClick={() => setCurrentPage(tool.id)}
+            >
+              <CardContent className="p-5">
+                <div
+                  className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} text-white mb-3 group-hover:scale-110 transition-transform`}
+                >
+                  {tool.icon}
+                </div>
+                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                  {tool.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">{tool.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* New Tools Section */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">أدوات جديدة</h2>
+            <Sparkles className="h-5 w-5 text-teal-600" />
+          </div>
+          <Badge variant="secondary">{newTools.length} أداة</Badge>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {newTools.map((tool) => (
+            <Card
+              key={tool.id}
+              className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-teal-200 dark:border-teal-800"
               onClick={() => setCurrentPage(tool.id)}
             >
               <CardContent className="p-5">

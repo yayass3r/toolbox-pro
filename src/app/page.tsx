@@ -22,6 +22,14 @@ import { ScreenshotTool } from '@/components/tools/screenshot-tool';
 import { EmojiPicker } from '@/components/tools/emoji-picker';
 import { CssGenerator } from '@/components/tools/css-generator';
 import { MarkdownEditor } from '@/components/tools/markdown-editor';
+import { ResumeBuilder } from '@/components/tools/resume-builder';
+import { InvoiceGenerator } from '@/components/tools/invoice-generator';
+import { LinkShortener } from '@/components/tools/link-shortener';
+import { ImageResizer } from '@/components/tools/image-resizer';
+import { VideoToGif } from '@/components/tools/video-to-gif';
+import { TimerStopwatch } from '@/components/tools/timer-stopwatch';
+import { AgeCalculator } from '@/components/tools/age-calculator';
+import { WordCloud } from '@/components/tools/word-cloud';
 import { AdminDashboard } from '@/components/admin/admin-dashboard';
 import { PremiumPage } from '@/components/premium-page';
 import { ProfilePage } from '@/components/auth/profile';
@@ -63,6 +71,22 @@ function PageRenderer({ page }: { page: PageId }) {
       return <CssGenerator />;
     case 'markdown-editor':
       return <MarkdownEditor />;
+    case 'resume-builder':
+      return <ResumeBuilder />;
+    case 'invoice-generator':
+      return <InvoiceGenerator />;
+    case 'link-shortener':
+      return <LinkShortener />;
+    case 'image-resizer':
+      return <ImageResizer />;
+    case 'video-to-gif':
+      return <VideoToGif />;
+    case 'timer-stopwatch':
+      return <TimerStopwatch />;
+    case 'age-calculator':
+      return <AgeCalculator />;
+    case 'word-cloud':
+      return <WordCloud />;
     case 'admin':
       return <AdminDashboard />;
     case 'premium':
@@ -97,12 +121,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {currentPage !== 'admin' && <Navbar />}
       <AuthDialog />
-      <main className="flex-1 container mx-auto px-4 py-6">
+      <main className={currentPage === 'admin' ? 'flex-1' : 'flex-1 container mx-auto px-4 py-6'}>
         <PageRenderer page={currentPage} />
       </main>
-      <Footer />
+      {currentPage !== 'admin' && <Footer />}
     </div>
   );
 }
