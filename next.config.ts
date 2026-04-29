@@ -11,7 +11,10 @@ const nextConfig: NextConfig = {
     ".chatglm.site",
   ],
   images: {
-    domains: ["cloud.appwrite.io", "avatars.githubusercontent.com"],
+    remotePatterns: [
+      { protocol: "https", hostname: "cloud.appwrite.io" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+    ],
   },
 };
 

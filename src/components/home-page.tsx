@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AdBanner } from '@/components/shared/ad-banner';
+import { SocialShareButtons } from '@/components/shared/social-share';
 import {
   QrCode,
   Key,
@@ -280,6 +281,12 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* Share Bar */}
+      <div className="flex items-center justify-between mb-8">
+        <p className="text-sm text-muted-foreground">أعجبك الموقع؟ شاركه مع أصدقائك!</p>
+        <SocialShareButtons compact />
+      </div>
+
       {/* Ad Banner */}
       <AdBanner slot="home-top" format="horizontal" className="mb-8" />
 
@@ -459,6 +466,13 @@ export function HomePage() {
           <Crown className="h-4 w-4 ml-1" />
           اشترك الآن - $9.99/شهر
         </Button>
+      </section>
+
+      {/* Social Share */}
+      <section className="mb-8">
+        <Card className="p-6">
+          <SocialShareButtons />
+        </Card>
       </section>
 
       {/* Newsletter */}
